@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>crux-24 — 競艇1マーク展開予想</title>
 <meta name="description" content="crux-24: 競艇の1マーク展開をAIで予測するプロジェクト。開発中。">
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%230b1f33'/%3E%3Cpath d='M14 40 L32 16 L50 40 L38 40 L38 50 L26 50 L26 40 Z' fill='%23ff6a3d'/%3E%3C/svg%3E">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Ccircle cx='32' cy='32' r='30' fill='%230d2e30'/%3E%3Cpath d='M32,13 A19,19 0 0,0 32,51 Z' fill='%23f0e8dc'/%3E%3Cpath d='M32,13 A19,19 0 0,1 32,51' fill='none' stroke='%23f0e8dc' stroke-width='2.6'/%3E%3C/svg%3E">
 <!-- SNSでURLを共有した際にタイトル・説明・カード表示が出るようにするメタタグ
      (LINE/X/noteでの配信がこのプロジェクトの主要な導線のため、共有時の見え方は
      地味に重要)。og:imageは専用のシェア画像ができ次第追加する(現状は画像無し
@@ -19,60 +19,88 @@
 <meta name="twitter:title" content="crux-24 — 競艇1マーク展開予想">
 <meta name="twitter:description" content="スタートから1マーク旋回までの各艇の動きを、実際のレース映像から再現・学習し、次のレースの展開を予測するプロジェクトです。現在開発中。">
 <style>
+/* 【2026-08-14 情報設計を刷新】ユーザーから実機のスマホで見た感想として
+   「文章が多くて見る気にならない。どこに焦点を当てればいいか分からず落ち着かない」
+   との指摘。旧版は開いてすぐの画面に見出し+説明文2文+ステータスカードの長文が
+   並び、肝心の動画は2画面分スクロールしないと出てこなかった。今回は
+   「動画そのものが一番の証拠」という前提に立ち、ヒーローを「ロゴ+一言+動画」
+   だけに絞り、それ以外(プロジェクト背景・注意書き全文・他チャネル)は
+   <details>による折りたたみへ retreat させて、見たい人だけが開く設計にした。
+   賭け金に関する注意喚起だけは折りたたまず常時見える短い一文として残す
+   (安全上の理由で隠すべきではないため)。 */
 :root{
-  --navy-950:#081321; --navy-900:#0b1f33; --navy-800:#123049; --navy-700:#1b4166;
-  --ground:#f5f8fb; --panel:#ffffff; --panel-border:#dde6ee;
-  --ink:#0d1f30; --ink-soft:#4a5d70; --ink-faint:#8296a8;
-  --accent:#ff6a3d; --accent-ink:#7a2c11; --accent-soft:#ffe6da;
+  --navy-950:#06181a; --navy-900:#0d2e30; --navy-800:#123f41; --navy-700:#1a5254;
+  --ground:#f7f5f0; --panel:#ffffff; --panel-border:#e2ddd0;
+  --ink:#122423; --ink-soft:#4c5f5c; --ink-faint:#87968f;
+  --accent:#0d6b6d; --accent-ink:#0a3d3e; --accent-soft:#dcece9;
   --warn:#e0a422; --warn-soft:#fdf1d9;
   --font-jp: "Hiragino Sans","YuGothic","Yu Gothic UI","Meiryo","Segoe UI",sans-serif;
   --font-num: ui-monospace,"SF Mono","Cascadia Mono","Consolas",monospace;
 }
 @media (prefers-color-scheme: dark){
-  :root{ --ground:#081422; --panel:#0e2035; --panel-border:#1c3550; --ink:#eaf1f7; --ink-soft:#a9bccd; --ink-faint:#71879b;
-  --accent:#ff835b; --accent-ink:#ffd9c9; --accent-soft:#3a2013; --warn:#f0bc4d; --warn-soft:#3a2f11; }
+  :root:not([data-theme="light"]){ --ground:#081b1c; --panel:#0e2e30; --panel-border:#1c4143; --ink:#f0e8dc; --ink-soft:#b8c9c7; --ink-faint:#71938f;
+  --accent:#f0e8dc; --accent-ink:#f5ecd9; --accent-soft:#2e2a1f; --warn:#f0bc4d; --warn-soft:#3a2f11; }
 }
-:root[data-theme="dark"]{ --ground:#081422; --panel:#0e2035; --panel-border:#1c3550; --ink:#eaf1f7; --ink-soft:#a9bccd; --ink-faint:#71879b;
-  --accent:#ff835b; --accent-ink:#ffd9c9; --accent-soft:#3a2013; --warn:#f0bc4d; --warn-soft:#3a2f11; }
-:root[data-theme="light"]{ --ground:#f5f8fb; --panel:#ffffff; --panel-border:#dde6ee; --ink:#0d1f30; --ink-soft:#4a5d70; --ink-faint:#8296a8;
-  --accent:#ff6a3d; --accent-ink:#7a2c11; --accent-soft:#ffe6da; --warn:#e0a422; --warn-soft:#fdf1d9; }
+:root[data-theme="dark"]{ --ground:#081b1c; --panel:#0e2e30; --panel-border:#1c4143; --ink:#f0e8dc; --ink-soft:#b8c9c7; --ink-faint:#71938f;
+  --accent:#f0e8dc; --accent-ink:#f5ecd9; --accent-soft:#2e2a1f; --warn:#f0bc4d; --warn-soft:#3a2f11; }
+:root[data-theme="light"]{ --ground:#f7f5f0; --panel:#ffffff; --panel-border:#e2ddd0; --ink:#122423; --ink-soft:#4c5f5c; --ink-faint:#87968f;
+  --accent:#0d6b6d; --accent-ink:#0a3d3e; --accent-soft:#dcece9; --warn:#e0a422; --warn-soft:#fdf1d9; }
 
 *{box-sizing:border-box;}
-body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--font-jp);line-height:1.75;-webkit-font-smoothing:antialiased;}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--font-jp);line-height:1.65;-webkit-font-smoothing:antialiased;}
 a{color:var(--accent);}
-.wrap{max-width:760px;margin:0 auto;padding:0 20px 80px;}
+.wrap{max-width:720px;margin:0 auto;padding:0 18px 56px;}
 
 header.hero{
   background:linear-gradient(160deg,var(--navy-950) 0%,var(--navy-800) 60%,var(--navy-700) 100%);
-  color:#eaf1f7;padding:56px 20px 44px;
+  color:#eaf1f7;padding:28px 18px 22px;
 }
-.hero-inner{max-width:760px;margin:0 auto;}
-.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-num);font-size:12px;letter-spacing:.12em;text-transform:uppercase;
-  color:#ffd9c9;background:rgba(255,106,61,.16);border:1px solid rgba(255,106,61,.35);padding:5px 12px;border-radius:999px;}
-.eyebrow .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);box-shadow:0 0 0 4px rgba(255,106,61,.25);}
-h1{font-size:clamp(26px,5vw,36px);margin:18px 0 10px;font-weight:800;letter-spacing:-.01em;text-wrap:balance;}
-.hero p{color:#b9cad9;font-size:15px;max-width:56ch;margin:0;}
+.hero-inner{max-width:720px;margin:0 auto;}
+.brand-row{display:flex;align-items:center;gap:8px;margin-bottom:14px;}
+.brand-row svg{width:20px;height:20px;flex-shrink:0;}
+.brand-row span{font-family:var(--font-num);font-size:12.5px;letter-spacing:.1em;color:#cfe0dd;font-weight:700;}
+h1{font-size:clamp(21px,5.2vw,27px);margin:0 0 16px;font-weight:800;letter-spacing:-.01em;text-wrap:balance;line-height:1.4;}
 
-main{padding-top:36px;}
-section{margin-bottom:36px;}
-h2{font-size:19px;font-weight:800;margin:0 0 10px;}
-p{color:var(--ink-soft);margin:0 0 12px;}
+/* 動画をヒーロー内、見出し直下に置く(=開いて最初にスクロールなしで見える主役)。 */
+.hero-video{border-radius:14px;overflow:hidden;border:1px solid rgba(240,232,220,.18);box-shadow:0 12px 28px -14px rgba(0,0,0,.55);}
+.hero-video video{display:block;width:100%;aspect-ratio:16/9;background:#06181a;}
+.hero-caption{display:flex;justify-content:space-between;flex-wrap:wrap;gap:6px;margin-top:9px;font-size:12px;color:#a9beba;font-family:var(--font-num);}
 
-.card{background:var(--panel);border:1px solid var(--panel-border);border-radius:16px;padding:22px 24px;box-shadow:0 1px 2px rgba(13,31,48,.06), 0 8px 24px -12px rgba(13,31,48,.18);}
+.safety-pill{display:flex;align-items:flex-start;gap:7px;margin-top:14px;padding:9px 12px;background:rgba(224,164,34,.14);
+  border:1px solid rgba(224,164,34,.4);border-radius:10px;font-size:12px;color:#ffe4ad;line-height:1.5;}
+.safety-pill .ico{flex-shrink:0;line-height:1.4;}
 
-.status-badge{display:inline-flex;align-items:center;gap:8px;background:var(--warn-soft);color:var(--warn);border-radius:999px;padding:6px 14px;font-size:13px;font-weight:700;margin-bottom:14px;}
-.status-badge .dot{width:7px;height:7px;border-radius:50%;background:var(--warn);}
+main{padding-top:22px;}
+h2{font-size:15px;font-weight:800;margin:0 0 8px;color:var(--ink);}
+p{color:var(--ink-soft);margin:0 0 10px;font-size:14px;}
 
-.video-placeholder{
-  border:1px dashed var(--panel-border);border-radius:14px;aspect-ratio:16/9;
-  display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:14px;text-align:center;padding:20px;
-  background:repeating-linear-gradient(135deg, transparent 0 12px, rgba(130,150,168,.06) 12px 24px);
-}
+/* 折りたたみセクション: 見たい人だけが開く(=デフォルトは要約1行のみ表示)。
+   ネイティブ<details>を使うことでJS無しでも動作し、モバイルのタップ操作にも
+   素直に馴染む。 */
+details{background:var(--panel);border:1px solid var(--panel-border);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+details summary{list-style:none;cursor:pointer;padding:13px 16px;display:flex;align-items:center;justify-content:space-between;gap:10px;font-size:13.5px;font-weight:700;color:var(--ink);}
+details summary::-webkit-details-marker{display:none;}
+details summary .chev{color:var(--ink-faint);font-size:12px;transition:transform .15s;flex-shrink:0;}
+details[open] summary .chev{transform:rotate(180deg);}
+details .body{padding:0 16px 15px;}
+details .sub{font-size:12px;color:var(--ink-faint);font-weight:400;}
 
-.channels{display:flex;flex-wrap:wrap;gap:10px;margin-top:6px;}
-.channel{font-family:var(--font-num);font-size:12.5px;font-weight:700;padding:6px 12px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);}
+.status-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px;}
+.status-badge{display:inline-flex;align-items:center;gap:6px;background:var(--accent-soft);color:var(--accent-ink);border-radius:999px;padding:5px 12px;font-size:11.5px;font-weight:700;}
+.status-badge .dot{width:6px;height:6px;border-radius:50%;background:var(--accent);}
+.status-badge.pred{background:var(--warn-soft);color:#8a6512;}
+.status-badge.pred .dot{background:var(--warn);}
+:root[data-theme="dark"] .status-badge.pred, :root:not([data-theme="light"]) .status-badge.pred{color:var(--warn);}
+@media (prefers-color-scheme: light){ :root:not([data-theme="dark"]) .status-badge.pred{color:#8a6512;} }
 
-footer{color:var(--ink-faint);font-size:12.5px;padding-top:20px;border-top:1px solid var(--panel-border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
+.channels{display:flex;flex-wrap:wrap;gap:8px;margin-top:2px;}
+.channel{font-family:var(--font-num);font-size:12px;font-weight:700;padding:5px 11px;border-radius:999px;background:var(--accent-soft);color:var(--accent-ink);}
+
+.video-placeholder{border:1px dashed var(--panel-border);border-radius:10px;aspect-ratio:16/9;
+  display:flex;align-items:center;justify-content:center;color:var(--ink-faint);font-size:13px;text-align:center;padding:16px;
+  background:repeating-linear-gradient(135deg, transparent 0 12px, rgba(130,150,168,.06) 12px 24px);}
+
+footer{color:var(--ink-faint);font-size:12px;padding-top:16px;margin-top:14px;border-top:1px solid var(--panel-border);display:flex;justify-content:space-between;flex-wrap:wrap;gap:8px;}
 footer .f-updated{font-family:var(--font-num);}
 </style>
 </head>
@@ -80,48 +108,73 @@ footer .f-updated{font-family:var(--font-num);}
 
 <header class="hero">
   <div class="hero-inner">
-    <span class="eyebrow"><span class="dot"></span>CRUX-24</span>
-    <h1>crux-24 — 競艇1マーク展開予想</h1>
-    <p>スタートから1マーク旋回までの各艇の動きを、実際のレース映像から再現・学習し、次のレースの展開を予測するプロジェクトです。</p>
+    <div class="brand-row">
+      <svg viewBox="-52 -52 104 104" aria-hidden="true">
+        <path d="M 0,-50 A 50,50 0 0,0 0,50 Z" fill="#f0e8dc"/>
+        <path d="M 0,-50 A 50,50 0 0,1 0,50" fill="none" stroke="#f0e8dc" stroke-width="6"/>
+      </svg>
+      <span>CRUX-24</span>
+    </div>
+    <h1>1マークの展開を、AIで再現・予測する。</h1>
+
+    <div class="hero-video">
+      <video controls preload="metadata" poster="">
+        <source src="videos/20260501_12R_reproduction.mp4" type="video/mp4">
+        お使いのブラウザは動画再生に対応していません。
+      </video>
+    </div>
+    <div class="hero-caption">
+      <span>戸田12R(2026-05-01)・結果再現</span>
+      <span>実際のレース映像から再現</span>
+    </div>
+
+    <div class="safety-pill">
+      <span class="ico">⚠</span>
+      <span>開発中の実験段階です。的中を保証するものではありません。<strong>賭け金の判断材料には使用しないでください。</strong></span>
+    </div>
   </div>
 </header>
 
 <div class="wrap">
 <main>
 
-  <section>
-    <div class="card">
-      <span class="status-badge"><span class="dot"></span>開発中・実験段階</span>
-      <p style="margin:0;">このプロジェクトは現在、精度検証を続けながら開発を進めています。ここに掲載される予測は<strong style="color:var(--ink)">参考値であり、まだ実用的な精度には達していません。</strong>予測の的中や結果を保証するものではなく、賭け金の判断材料として使用しないでください。</p>
+  <div class="status-row">
+    <span class="status-badge"><span class="dot"></span>再現モデル・稼働中</span>
+    <span class="status-badge pred"><span class="dot"></span>予測モデル・信頼度低</span>
+  </div>
+
+  <details>
+    <summary>予測検証ログ<span class="chev">▾</span></summary>
+    <div class="body">
+      <p>レース前の展開を予測し、結果と正直に照らし合わせる検証コンテンツを準備中です。現在の予測ロジックはまだ実験段階で、まくりのような逆転展開はまだ予測できていません。的中も外れも、すべて公開する方針です。</p>
+      <div class="video-placeholder">近日公開予定です</div>
     </div>
-  </section>
+  </details>
 
-  <section>
-    <h2>最新の予測アニメーション</h2>
-    <p>近日公開予定です。手入力による実測データを積み上げながら、予測モデルの精度を継続的に検証しています。</p>
-    <div class="video-placeholder">動画は準備中です</div>
-  </section>
-
-  <section>
-    <h2>このプロジェクトについて</h2>
-    <p>実際のレース結果映像から各艇の真上から見た位置関係を人手で再現し、そのデータをもとに「1マークでどのような展開になりやすいか」を学習しています。順位の的中ではなく、各艇の動き・攻めの成否といった<strong style="color:var(--ink)">展開そのものの再現精度</strong>を重視しています。</p>
-  </section>
-
-  <section>
-    <h2>他のチャネル</h2>
-    <p>このプロジェクトの更新は、以下でも発信予定です。</p>
-    <div class="channels">
-      <span class="channel">LINE</span>
-      <span class="channel">X (Twitter)</span>
-      <span class="channel">note</span>
+  <details>
+    <summary>このプロジェクトについて <span class="sub">・なぜ作っているか</span><span class="chev">▾</span></summary>
+    <div class="body">
+      <p>実際のレース結果映像から各艇の真上から見た位置関係を人手で再現し、そのデータをもとに「1マークでどのような展開になりやすいか」を学習しています。順位の的中ではなく、各艇の動き・攻めの成否といった<strong style="color:var(--ink)">展開そのものの再現精度</strong>を重視しています。開発の過程(バグの発見・修正・精度の推移)もすべて公開する方針です。</p>
     </div>
-  </section>
+  </details>
+
+  <details>
+    <summary>他のチャネル<span class="chev">▾</span></summary>
+    <div class="body">
+      <p style="margin-bottom:8px;">このプロジェクトの更新は、以下でも発信予定です。</p>
+      <div class="channels">
+        <span class="channel">LINE</span>
+        <span class="channel">X (Twitter)</span>
+        <span class="channel">note</span>
+      </div>
+    </div>
+  </details>
 
 </main>
 
 <footer>
   <span>crux-24</span>
-  <span class="f-updated">最終更新: 2026-07-23</span>
+  <span class="f-updated">最終更新: 2026-08-14</span>
 </footer>
 </div>
 
